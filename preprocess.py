@@ -1,7 +1,6 @@
 from itertools import groupby
 from typing import Callable, List, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pycountry
