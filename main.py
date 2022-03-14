@@ -1,19 +1,37 @@
-from preprocess import PreprocessData
-from data_loader import load_data
-from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
+from data_loader import load_data
+from preprocess import PreprocessData
+from plot import PlotData
 
-def main(data_root: str) -> None:
+def main(data_root: str, save_plots: bool = False) -> None:
     """
     Function which loads data, preprocesses them and fits a model.
+    Next plot data and save them into img folder.
     """
     raw_data = load_data(data_root=data_root)
     preprocessor = PreprocessData(raw_data=raw_data)
     metadata = preprocessor.get_metadata()
     processed_data = preprocessor.get_data()
-    scores = ['E_score', 'N_score', 'A_score', 'C_score', 'O_score']
+
+    if save_plots:
+        levels = ['E_level', 'N_level', 'A_level', 'C_level', 'O_level']
+        plots = [sns.barplot, sns.boxplot, sns.violinplot]
+        plotter = PlotData(imgdir_path="results")
+        for level in levels:
+            for plot in plots:
+                plotter.plot(
+                    data=processed_data,
+                    x=level,
+                    y="performance",
+                    plot=plot,
+                    autosave=True)
+
+    levels = ['E_score', 'N_score', 'A_score', 'C_score', 'O_score']
     inp = processed_data[scores]
     tgt = processed_data["performance"]
     train_inp, test_inp, train_tgt, test_tgt = train_test_split(inp, tgt, test_size=0.2, random_state=42)
@@ -25,5 +43,6 @@ def main(data_root: str) -> None:
     print(f"Model metadata: {metadata}")
     print(f"Regression coefficients: {regres_coefs}")
 
+
 if __name__ == '__main__':
-    main(data_root="./data")
+    main(data_root="./data", save_plots=True)
