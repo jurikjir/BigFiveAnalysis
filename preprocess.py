@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pycountry
 import seaborn as sns
+from tqdm import tqdm
 
 from maps import ans_map, maps, strfwd_score_map
 
@@ -163,7 +164,8 @@ def chain_funcs(data: pd.DataFrame, funcs: List[Callable]) -> pd.DataFrame:
     Apply a list of functions to a dataframe and collects metadata.
     """
     raw_data_len = len(data)
-    for i, func in enumerate(funcs):
+    print("Preprocessing dataset...")
+    for i, func in enumerate(tqdm(funcs)):
         if i == 0:
             metadata = ""
         data, metadata = func(data, metadata)
