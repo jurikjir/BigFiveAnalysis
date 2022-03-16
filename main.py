@@ -2,12 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn import metrics
 from tqdm import tqdm
+import pandas as pd
 
 from data_loader import load_data
+from plot import plot_data
 from preprocess import PreprocessData
-from plot import PlotData
 
 
 def main(data_root: str, save_plots: bool = False) -> None:
@@ -19,32 +22,29 @@ def main(data_root: str, save_plots: bool = False) -> None:
     preprocessor = PreprocessData(raw_data=raw_data)
     metadata = preprocessor.get_metadata()
     processed_data = preprocessor.get_data()
-
     if save_plots:
-        levels = ['E_level', 'N_level', 'A_level', 'C_level', 'O_level']
-        plots = [sns.barplot, sns.boxplot, sns.violinplot]
-        plotter = PlotData(imgdir_path="results")
-        for level in tqdm(levels):
-            for plot in plots:
-                plotter.plot(
-                    data=processed_data,
-                    x=level,
-                    y="performance",
-                    plot=plot,
-                    autosave=True)
-
+        print("Plotting data. It may take a while...")
+        plot_data(processed_data=processed_data)
     scores = ['E_score', 'N_score', 'A_score', 'C_score', 'O_score']
     inp = processed_data[scores]
     tgt = processed_data["performance"]
-    train_inp, test_inp, train_tgt, test_tgt = train_test_split(inp, tgt, test_size=0.2, random_state=42)
-    model = LinearRegression()
-    model.fit(train_inp, train_tgt)
-    pred = model.predict(test_inp)
-    regres_coefs = {value: coef for value, coef in zip(scores, model.coef_)}
-    regres_coefs["intercept"] = model.intercept_
+    train_inp, test_inp, train_tgt, test_tgt = train_test_split(inp, tgt, test_size=0.15, random_state=42)
+    # model = LinearRegression()
+    forest_model = RandomForestClassifier(n_estimators=100)
+    linear_model = LinearRegression()
+    forest_model.fit(train_inp, train_tgt)
+    linear_model.fit(train_inp, train_tgt)
+    forest_pred = forest_model.predict(test_inp)
+    linear_pred = linear_model.predict(test_inp)
+    forest_acc = metrics.accuracy_score(test_tgt, forest_pred)
+    linear_acc = metrics.accuracy_score(test_tgt, np.round(linear_pred))
+    regres_coefs = {value: coef for value, coef in zip(scores, linear_model.coef_)}
+    regres_coefs["intercept"] = linear_model.intercept_
     print(f"Model metadata: {metadata}")
     print(f"Regression coefficients: {regres_coefs}")
+    print(f"Forest accuracy : {forest_acc}%")
+    print(f"Regression accuracy : {linear_acc}%")
 
 
 if __name__ == '__main__':
-    main(data_root="./data", save_plots=True)
+    main(data_root="./data", save_plots=False)
