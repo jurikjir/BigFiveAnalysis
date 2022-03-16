@@ -1,13 +1,13 @@
 from itertools import groupby
 from typing import Callable, List, Tuple
 
-import numpy as np
 import pandas as pd
 import pycountry
 import seaborn as sns
 from tqdm import tqdm
 
 from maps import ans_map, maps, strfwd_score_map
+from ranges import level_range, age_range
 
 
 def init_metadata(data: pd.DataFrame, metadata: str,) -> Tuple[pd.DataFrame, str]: 
@@ -124,39 +124,28 @@ def assign_level(data, metadata):
     Example:
     Extraversion_score in [90, 100] -> E_ext_high
     Extraversion_score in [70, 90] -> E_high
-    Extraversion_score in [60, 70] -> E_moderate
+    Extraversion_score in [60, 70] -> E_higher
     Extraversion_score in [40, 60] -> neutral
-    Extraversion_score in [30, 40] -> I_moderate
-    Extraversion_score in [10, 30] -> I_high
-    Extraversion_score in [0, 10] -> I_extreme
+    Extraversion_score in [30, 40] -> E_lower
+    Extraversion_score in [10, 30] -> E_low
+    Extraversion_score in [0, 10] -> E_ext_low
     """
     for column in data.columns:
         if "score" in column:
             first_letter = column[0]
             new_col_name = first_letter + "_level"
-            data[new_col_name] = data[column].apply(lambda x: level(x))
+            data[new_col_name] = data[column].apply(lambda x: level_range(x))
     return data, metadata
 
 
-def level(value):
+def assign_age_range(data, metadata):
     """
-    Return level of trait by its score.
-    Note: Not quite proud of this, but it works.
+    Assign age range. Example
+    age = 23 -> age_range = [20, 30]
+    age = 54 -> age_range = [50, 60]
     """
-    if 90 < value <= 100:
-        return "ext_high"
-    elif 70 < value <= 90:
-        return "high"
-    elif 60 < value <= 70:
-        return "higher"
-    elif 40 <= value <= 60:
-        return "neutral"
-    elif 30 <= value < 40:
-        return "lower"
-    elif 10 <= value < 30:
-        return "low"
-    elif 0 <= value < 10:
-        return "ext_low"
+    data["age_range"] = data["age"].apply(lambda x: age_range(x))
+    return data, metadata
 
 
 def chain_funcs(data: pd.DataFrame, funcs: List[Callable]) -> pd.DataFrame:
@@ -187,7 +176,8 @@ class PreprocessData(object):
             apply_maps,
             remove_zero_ans,
             calculate_scores,
-            assign_level
+            assign_level,
+            assign_age_range
             ]) -> None:
         """
         Load and process data
