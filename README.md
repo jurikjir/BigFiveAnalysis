@@ -26,7 +26,21 @@ data preprocessing, plotting and model fitting.
 2. preprocess.py
 Contains module which chains preprocessing functions and collect preprocessing data, which are
 then used in report. It is possible to add new functions if it is preserved convention
-that function takes and returns varables: data and metadata
+that function takes and returns varables: data and metadata. function has to be plugged into
+PreprocessData module pipeline:
+
+```
+        process_funcs: List[Callable] = [
+            init_metadata,
+            process_age,
+            process_country,
+            apply_maps,
+            remove_zero_ans,
+            calculate_scores,
+            assign_level,
+            assign_age_range
+            ]) -> None:    
+```
 
 3. dataloader.py
 Function which loads data from csv and converts to pandas dataframe
